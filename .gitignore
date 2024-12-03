@@ -8,6 +8,7 @@ __pycache__/
 
 # Data and Model Weights
 data/
+model_weights/
 *.meta
 *.pt
 *.pth
@@ -16,8 +17,12 @@ data/
 *.hdf5
 *.npy
 *.npz
+output_logs/
 
 # Distribution / packaging
+*.vscode/
+*vscode/
+*launch.json
 .Python
 env/
 venv/
