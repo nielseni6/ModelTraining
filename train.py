@@ -24,7 +24,7 @@ def main(args):
 
     for args.model in args.models:
         
-        resize = 64 if args.model == 'alexnet' and (args.resize is None or args.resize < 64) else args.resize
+        resize = 64 if args.model in ['alexnet', 'inception'] and (args.resize is None or args.resize < 64) else args.resize
         # Do not need to resize ImageNet images if the model is AlexNet and the resize is less than 64
         resize = None if args.dataset == "ImageNet" and args.resize and args.resize < 224 else args.resize
         
@@ -86,10 +86,11 @@ def main(args):
         except Exception as e:
             print(f"Skipping {args.model} - An error occurred during training: {e}")
             continue
-        
+
 # nohup python train.py --models resnet18 alexnet efficientnet_v2 efficientnet mobilenet shufflenet googlenet inception densenet squeezenet vgg16 --dataset CIFAR100 --pretrained --device 2 --disable_loading_bar > output_logs/gpu2.log 2>&1 &
 # nohup python train.py --models resnet18 alexnet efficientnet_v2 efficientnet mobilenet shufflenet googlenet inception densenet squeezenet vgg16 --dataset CIFAR10 --pretrained --device 7 --disable_loading_bar > output_logs/gpu7.log 2>&1 &
-# nohup python train.py --models resnet18 alexnet efficientnet_v2 efficientnet mobilenet shufflenet googlenet inception densenet squeezenet vgg16 --dataset ImageNet --pretrained --device 3 --disable_loading_bar > output_logs/gpu3.log 2>&1 &
+# nohup python train.py --models vgg16 squeezenet densenet inception googlenet shufflenet mobilenet efficientnet efficientnet_v2 alexnet resnet18 --dataset ImageNet --device 3 > output_logs/gpu3_2.log 2>&1 &
+# nohup python train.py --models alexnet efficientnet_v2 efficientnet mobilenet shufflenet googlenet inception densenet squeezenet vgg16 resnet18 --dataset ImageNet --device 4 > output_logs/gpu4.log 2>&1 &
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train a torchvision model on a dataset')
     parser.add_argument('--dataset', type=str, default='CIFAR10', choices=['CIFAR10', 'CIFAR100', 'MNIST', 'ImageNet'], help='Dataset to use')

@@ -18,10 +18,12 @@ model_weights/
 *.npy
 *.npz
 output_logs/
-
-# Distribution / packaging
 *.vscode/
 *vscode/
+vscode/
+.vscode/
+
+# Distribution / packaging
 *launch.json
 .Python
 env/
