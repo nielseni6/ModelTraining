@@ -30,7 +30,7 @@ def main(args):
         
         trainloader, testloader = get_dataset(args.dataset, args.batch_size, resize=resize)
         num_classes = 10 if args.dataset in ['CIFAR10', 'MNIST'] else 100 if args.dataset == 'CIFAR100' else 1000
-        
+
         try:
         # if True:
             model = get_model(args.model, num_classes, args.pretrained).to(device)
@@ -106,6 +106,9 @@ def main(args):
 # [~] nohup python train.py --models squeezenet densenet inception googlenet shufflenet mobilenet efficientnet efficientnet_v2 alexnet resnet18 --dataset ImageNet --device 3 > output_logs/gpu3.log 2>&1 &
 # [~] nohup python train.py --models alexnet efficientnet_v2 efficientnet mobilenet shufflenet googlenet inception densenet squeezenet resnet18 --dataset ImageNet --device 4 > output_logs/gpu4.log 2>&1 &
 
+# [~] nohup python train.py --training_type 'robust_gaussian' --models mobilenet resnet18 efficientnet_v2 --dataset ImageNet --device 5 > output_logs/gpu5.log 2>&1 &
+# [~] nohup python train.py --training_type 'robust_gaussian' --models googlenet shufflenet efficientnet densenet --dataset ImageNet --device 6 > output_logs/gpu6.log 2>&1 &
+
 ##### CIFAR100 #####
 # [x] nohup python train.py --training_type 'robust_gaussian' --models squeezenet densenet inception googlenet shufflenet --dataset CIFAR100 --device 3 > output_logs/gpu3_2.log 2>&1 &
 # [x] nohup python train.py --training_type 'robust_gaussian' --models shufflenet googlenet densenet squeezenet resnet18 --dataset CIFAR100 --device 4 > output_logs/gpu4_2.log 2>&1 &
@@ -120,6 +123,9 @@ def main(args):
 # nohup python train.py --training_type 'standard' --models squeezenet densenet inception googlenet shufflenet --dataset CIFAR10 --device 1 > output_logs/gpu5.log 2>&1 &
 # nohup python train.py --training_type 'standard' --models shufflenet googlenet densenet squeezenet resnet18 --dataset CIFAR10 --device 7 > output_logs/gpu6.log 2>&1 &
 
+############################ Models to Use in Paper #############################
+# mobilenet resnet18 efficientnet efficientnet_v2 googlenet shufflenet densenet #
+################################################################################# 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train a torchvision model on a dataset')
     parser.add_argument('--dataset', type=str, default='CIFAR10', choices=['CIFAR10', 'CIFAR100', 'MNIST', 'ImageNet'], help='Dataset to use')

@@ -3,7 +3,7 @@ import torch
 
 def train_model(model, trainloader, criterion, optimizer, device, disable_loading_bar=False):
     model.train()
-    for inputs, labels in tqdm(trainloader, desc="Training", leave=False, disable=disable_loading_bar):
+    for inputs, labels in tqdm(trainloader, desc="Training", leave=False, disable=disable_loading_bar, mininterval=1.0):
         inputs, labels = inputs.to(device), labels.to(device)
         optimizer.zero_grad()
         outputs = model(inputs)
@@ -16,7 +16,7 @@ def test_model(model, testloader, criterion, device, disable_loading_bar=True):
     test_loss = 0
     correct = 0
     with torch.no_grad():
-        for inputs, labels in tqdm(testloader, desc="Testing", leave=False, disable=disable_loading_bar):
+        for inputs, labels in tqdm(testloader, desc="Testing", leave=False, disable=disable_loading_bar, mininterval=1.0):
             inputs, labels = inputs.to(device), labels.to(device)
             outputs = model(inputs)
             test_loss += criterion(outputs, labels).item()
@@ -26,7 +26,7 @@ def test_model(model, testloader, criterion, device, disable_loading_bar=True):
 
 def train_model_robust(model, trainloader, criterion, optimizer, device, noise_funct, disable_loading_bar=False):
     model.train()
-    for inputs, labels in tqdm(trainloader, desc="Training", leave=False, disable=disable_loading_bar):
+    for inputs, labels in tqdm(trainloader, desc="Training", leave=False, disable=disable_loading_bar, mininterval=1.0):
         inputs = noise_funct(inputs)
         inputs, labels = inputs.to(device), labels.to(device)
 
