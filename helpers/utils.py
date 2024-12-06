@@ -1,5 +1,6 @@
 import os
 import torch
+import random
 
 def make_run_dir(args, base_dir):
     # Create directories for saving model weights
@@ -22,21 +23,20 @@ def make_run_dir(args, base_dir):
 
     return run_dir
 
-def add_gaussian_noise(image, mean=0, std=1):
-    """
-    Generate Gaussian noise with the same size as the input image and add it to the image.
+class GaussianNoise:
+    def __init__(self, mean=0, std=0.05, random_std=False, low=0.01, high=0.1):
+        self.mean = mean
+        self.std = std
+        self.random_std = random_std
+        self.low = low
+        self.high = high
 
-    Parameters:
-    image (torch.Tensor): Input image.
-    mean (float): Mean of the Gaussian noise.
-    std (float): Standard deviation of the Gaussian noise.
-
-    Returns:
-    torch.Tensor: Image with added Gaussian noise.
-    """
-    noise = torch.normal(mean, std, image.size(), device=image.device)
-    noisy_image = image + noise
-    return noisy_image
+    def __call__(self, image):
+        if not self.random_std:
+            noise = torch.normal(self.mean, self.std, image.size(), device=image.device)
+        else:
+            noise = torch.normal(self.mean, random.uniform(self.low, self.high), image.size(), device=image.device)
+        return image + noise
 
 # CIFAR10 eps = 8/255, steps = 7, alpha = 2/255
 # MNIST eps = 0.3, steps = 40, alpha = 0.01

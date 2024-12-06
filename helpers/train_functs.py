@@ -27,8 +27,9 @@ def test_model(model, testloader, criterion, device, disable_loading_bar=True):
 def train_model_robust(model, trainloader, criterion, optimizer, device, noise_funct, disable_loading_bar=False):
     model.train()
     for inputs, labels in tqdm(trainloader, desc="Training", leave=False, disable=disable_loading_bar):
+        inputs = noise_funct(inputs)
         inputs, labels = inputs.to(device), labels.to(device)
-        
+
         optimizer.zero_grad()
         outputs = model(inputs)
         loss = criterion(outputs, labels)

@@ -96,8 +96,8 @@ def get_dataset(dataset_name, batch_size, resize=None):
     else:
         raise ValueError("Dataset not supported")
     
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=8)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=8)
     return trainloader, testloader
 
 def get_model(model_name, num_classes, pretrained=True):

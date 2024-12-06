@@ -24,9 +24,8 @@
             "cwd": "${fileDirname}",
             "python": "/home/nielseni6/miniconda3/envs/fcalc/bin/python",
             "console": "integratedTerminal",
-            "args": ["--device", "4", "--models", "efficientnet_v2", "efficientnet", "mobilenet", 
-            "shufflenet", "googlenet", "inception", "densenet", "squeezenet", "vgg16", "--dataset", 
-            "CIFAR10", "--pretrained", "--batch_size", "128",],
+            "args": ["--device", "4", "--dataset", "CIFAR10", "--training_type", "robust_gaussian", "--models", "efficientnet_v2", "efficientnet", "mobilenet", 
+            "shufflenet", "googlenet", "inception", "densenet", "squeezenet", "vgg16", "--pretrained", "--batch_size", "128",],
             "justMyCode": false
             // "env": {"/home/nielseni6/envs/YOLO/bin/python3": "${workspaceFolder}/mySubdir:${env:/home/nielseni6/envs/YOLO/bin/python3}"}
             // "justMyCode": true
