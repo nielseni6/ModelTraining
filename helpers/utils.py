@@ -1,6 +1,7 @@
 import os
 import torch
 import random
+import torch.nn as nn
 
 def make_run_dir(args, base_dir):
     # Create directories for saving model weights
@@ -31,7 +32,7 @@ class GaussianNoise:
         self.low = low
         self.high = high
 
-    def __call__(self, image):
+    def __call__(self, image, **kwargs):
         if not self.random_std:
             noise = torch.normal(self.mean, self.std, image.size(), device=image.device)
         else:
@@ -41,7 +42,7 @@ class GaussianNoise:
 # CIFAR10 eps = 8/255, steps = 7, alpha = 2/255
 # MNIST eps = 0.3, steps = 40, alpha = 0.01
 class PGDAttack:
-    def __init__(self, model, loss, eps=8/255, alpha=2/255, iters=7):
+    def __init__(self, model, loss, eps=8/255, alpha=2/255, iters=7, random_start=True):
         """
         Initialize the PGD attack.
 
@@ -51,12 +52,14 @@ class PGDAttack:
         eps (float): Maximum perturbation.
         alpha (float): Step size.
         iters (int): Number of iterations.
+        random_start (bool): Whether to start with a random perturbation.
         """
         self.model = model
-        self.loss = loss
+        self.loss = loss # nn.CrossEntropyLoss()
         self.eps = eps
         self.alpha = alpha
         self.iters = iters
+        self.random_start = random_start
 
     def __call__(self, images, labels=None):
         """
@@ -69,24 +72,37 @@ class PGDAttack:
         Returns:
         torch.Tensor: Adversarial images.
         """
-        images = images.clone().detach().to(images.device)
+        device = images.device if images.is_cuda else torch.device('cpu')
+        images = images.clone().detach().to(device)
         if labels is not None:
-            labels = labels.clone().detach().to(labels.device)
-        adv_images = images.clone().detach()
+            labels = labels.clone().detach().to(device)
+        adv_images = images.clone().detach().to(device)
         
-        for i in range(self.iters):
+        if self.random_start:
+            adv_images = adv_images + torch.empty_like(adv_images).uniform_(-self.eps, self.eps)
+            min, max = float(images.min() - self.eps), float(images.max() + self.eps)
+            adv_images = torch.clamp(adv_images, min=min, max=max).detach()
+
+        for _ in range(self.iters):
             adv_images.requires_grad_(True)
+            adv_images = adv_images.to(device)
+            # optimizer.zero_grad()
             outputs = self.model(adv_images)
+
+            if self.model.__class__.__name__.lower() == 'googlenet':
+                outputs = outputs.logits
 
             if labels is None:
                 _, labels = torch.max(outputs, 1)
                 
-            cost = self.loss(outputs, labels).to(images.device)
+            cost = self.loss(outputs, labels).to(device)
 
-            grad = torch.autograd.grad(cost, adv_images)[0]
 
-            adv_images = adv_images + self.alpha * grad.sign()
+            grad = torch.autograd.grad(cost, adv_images, retain_graph=False, create_graph=False)[0]
+
+            adv_images = adv_images.detach() + self.alpha * grad.sign()
             delta = torch.clamp(adv_images - images, min=-self.eps, max=self.eps)
-            adv_images = torch.clamp(images + delta, min=0, max=1).detach()
+            min, max = float(images.min() - self.eps), float(images.max() + self.eps)
+            adv_images = torch.clamp(images + delta, min=min, max=max).detach()
 
-        return adv_images
+        return adv_images.to(device)

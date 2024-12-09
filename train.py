@@ -31,8 +31,8 @@ def main(args):
         trainloader, testloader = get_dataset(args.dataset, args.batch_size, resize=resize)
         num_classes = 10 if args.dataset in ['CIFAR10', 'MNIST'] else 100 if args.dataset == 'CIFAR100' else 1000
 
-        try:
-        # if True:
+        # try:
+        if True:
             model = get_model(args.model, num_classes, args.pretrained).to(device)
             if args.replace_relu_with_selu:
                 replace_relu_with_selu(model)
@@ -49,10 +49,16 @@ def main(args):
             best_accuracy = 0
             epochs_no_improve = 0
 
+            model.to(device)
             if args.training_type == 'robust_gaussian':
-                noise_funct = GaussianNoise(random_std=True)
+                noise_funct = GaussianNoise(random_std=True, low=args.gaussian_noise_low, high=args.gaussian_noise_high)
             elif args.training_type == 'robust_pgd':
-                noise_funct = PGDAttack(model, criterion)
+                # CIFAR10 eps = 8/255, steps = 7, alpha = 2/255
+                # MNIST eps = 0.3, steps = 40, alpha = 0.01
+                noise_funct = PGDAttack(model, criterion, 
+                                        eps=8/255 if args.dataset in ['CIFAR10', 'CIFAR100', 'ImageNet'] else 0.3, 
+                                        iters=7 if args.dataset in ['CIFAR10', 'CIFAR100', 'ImageNet'] else 40, 
+                                        alpha=2/255 if args.dataset in ['CIFAR10', 'CIFAR100', 'ImageNet'] else 0.01) 
 
             print(f'Beginning training for {args.training_type} {args.model} on {args.dataset}')
             for epoch in range(args.epochs):
@@ -68,6 +74,8 @@ def main(args):
                     best_accuracy, epochs_no_improve = test_accuracy, 0
                     torch.save(model.state_dict(), best_model_path)
                 else:
+                    if args.load_best_weights and os.path.exists(best_model_path):
+                        model.load_state_dict(torch.load(best_model_path))
                     epochs_no_improve += 1
                 
                 # Early stopping
@@ -91,9 +99,9 @@ def main(args):
                 writer.writerow(['Argument', 'Value'])
                 for arg in vars(args):
                     writer.writerow([arg, getattr(args, arg)])
-        except Exception as e:
-            print(f"Skipping {args.model} - An error occurred during training: {e}")
-            continue
+        # except Exception as e:
+        #     print(f"Skipping {args.model} - An error occurred during training: {e}")
+        #     continue
 
 
 # x = script already ran
@@ -113,15 +121,25 @@ def main(args):
 # [x] nohup python train.py --training_type 'robust_gaussian' --models squeezenet densenet inception googlenet shufflenet --dataset CIFAR100 --device 3 > output_logs/gpu3_2.log 2>&1 &
 # [x] nohup python train.py --training_type 'robust_gaussian' --models shufflenet googlenet densenet squeezenet resnet18 --dataset CIFAR100 --device 4 > output_logs/gpu4_2.log 2>&1 &
 
-# [~] nohup python train.py --training_type 'standard' --models squeezenet densenet inception googlenet shufflenet --dataset CIFAR100 --device 5 > output_logs/gpu5.log 2>&1 &
-# [~] nohup python train.py --training_type 'standard' --models shufflenet googlenet densenet squeezenet resnet18 --dataset CIFAR100 --device 6 > output_logs/gpu6.log 2>&1 &
+# [x] nohup python train.py --training_type 'standard' --models squeezenet densenet inception googlenet shufflenet --dataset CIFAR100 --device 5 > output_logs/gpu5.log 2>&1 &
+# [x] nohup python train.py --training_type 'standard' --models shufflenet googlenet densenet squeezenet resnet18 --dataset CIFAR100 --device 6 > output_logs/gpu6.log 2>&1 &
+
+# [x] nohup python train.py --training_type 'standard' --models mobilenet efficientnet_v2 --dataset CIFAR100 --device 7 > output_logs/gpu7.log 2>&1 &
+# [x] nohup python train.py --training_type 'robust_gaussian' --models googlenet --dataset CIFAR100 --device 7 > output_logs/gpu7_2.log 2>&1 &
+# [] nohup python train.py --training_type 'robust_gaussian' --models mobilenet resnet18 efficientnet efficientnet_v2 googlenet shufflenet densenet --dataset CIFAR100 --device 7 > output_logs/gpu7_3.log 2>&1 &
+
+# [~] nohup python train.py --training_type 'robust_pgd' --models mobilenet efficientnet efficientnet_v2 --dataset CIFAR100 --device 1 > output_logs/gpu1.log 2>&1 &
+# [~] nohup python train.py --training_type 'robust_pgd' --models googlenet resnet18 shufflenet densenet --dataset CIFAR100 --device 0 > output_logs/gpu0.log 2>&1 &
+
 
 ##### CIFAR10 #####
 # [x] nohup python train.py --training_type 'robust_gaussian' --models squeezenet densenet inception googlenet shufflenet --dataset CIFAR10 --device 1 > output_logs/gpu1.log 2>&1 &
 # [x] nohup python train.py --training_type 'robust_gaussian' --models shufflenet googlenet densenet squeezenet resnet18 --dataset CIFAR10 --device 7 > output_logs/gpu7.log 2>&1 &
 
-# nohup python train.py --training_type 'standard' --models squeezenet densenet inception googlenet shufflenet --dataset CIFAR10 --device 1 > output_logs/gpu5.log 2>&1 &
-# nohup python train.py --training_type 'standard' --models shufflenet googlenet densenet squeezenet resnet18 --dataset CIFAR10 --device 7 > output_logs/gpu6.log 2>&1 &
+# [x] nohup python train.py --training_type 'standard' --models mobilenet resnet18 --dataset CIFAR10 --device 6 > output_logs/gpu6_2.log 2>&1 &
+
+# [x] nohup python train.py --training_type 'robust_pgd' --models mobilenet efficientnet efficientnet_v2 --dataset CIFAR10 --device 1 > output_logs/gpu1.log 2>&1 &
+# [x] nohup python train.py --training_type 'robust_pgd' --models googlenet resnet18 shufflenet densenet --dataset CIFAR10 --device 1 > output_logs/gpu1_2.log 2>&1 &
 
 ############################ Models to Use in Paper #############################
 # mobilenet resnet18 efficientnet efficientnet_v2 googlenet shufflenet densenet #
@@ -144,7 +162,9 @@ if __name__ == '__main__':
     parser.add_argument('--disable_loading_bar', action='store_true', help='Show loading bar during training and testing')
     parser.add_argument('--replace_relu_with_selu', type=bool, default=True, help='Replace ReLU activation with SELU')
     parser.add_argument('--training_type', type=str, default='standard', choices=['standard', 'robust_gaussian', 'robust_pgd'], help='Type of training to perform')
-    # Implement robust training for Gaussian and PGD attacks (Already started in the helpers/train_functs.py and utils.py)
+    parser.add_argument('--gaussian_noise_high', type=float, default=0.07, help='High value for Gaussian noise standard deviation')
+    parser.add_argument('--gaussian_noise_low', type=float, default=0.01, help='Low value for Gaussian noise standard deviation')
+    parser.add_argument('--load_best_weights', action='store_true', help='Load best weights if epoch results in worse accuracy than best')
     args = parser.parse_args()
     print(args)
 
